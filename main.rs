@@ -1,11 +1,5 @@
 #![no_std]
 #![no_main]
-#![deny(
-    clippy::mem_forget,
-    reason = "mem::forget is generally not safe to do with esp_hal types, especially those \
-    holding buffers for the duration of a data transfer."
-)]
-#![deny(clippy::large_stack_frames)]
 
 
 use esp_hal::gpio::{Level, Output, OutputConfig};
@@ -21,34 +15,23 @@ use esp_println as _;
 use defmt::info;
 use defmt::error;
 
-
 #[panic_handler]
-fn panic(panic_info: &core::panic::PanicInfo) -> ! {
-    error!("{}", panic_info);
+fn panic(_: &core::panic::PanicInfo) -> ! {
     loop {}
 }
 
-
-
-esp_bootloader_esp_idf::esp_app_desc!();
-
-#[allow(
-    clippy::large_stack_frames,
-    reason = "it's not unusual to allocate larger buffers etc. in main"
-)]
-#[esp_rtos::main]
-async fn main(spawner: Spawner) -> ! {
-
+#[esp_hal_embassy::main]
+async fn main(spawner: Spawner) {
 
     let config = esp_hal::Config::default().with_cpu_clock(CpuClock::max());
     let peripherals = esp_hal::init(config);
 
-    let timg0 = TimerGroup::new(peripherals.TIMG0);
-    let sw_interrupt =
-        esp_hal::interrupt::software::SoftwareInterruptControl::new(peripherals.SW_INTERRUPT);
-    esp_rtos::start(timg0.timer0, sw_interrupt.software_interrupt0);
+    let timer0 = TimerGroup::new(peripherals.TIMG1);
+    esp_hal_embassy::init(timer0.timer0);
 
     info!("Embassy initialized!");
+
+    let _ = spawner;
 
 
     let buzzer = Output::new(peripherals.GPIO12, Level::Low, OutputConfig::default());
@@ -57,6 +40,4 @@ async fn main(spawner: Spawner) -> ! {
     loop {
         beeper.is_lost();
     }
-
 }
-
