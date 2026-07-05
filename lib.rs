@@ -5,45 +5,36 @@ use embassy_time::{Duration, Timer};
 
 pub struct Beeper {
     pin: esp_hal::gpio::Output<'static>,
-    button: bool,
     boat_lost: bool,
-    battery: u8,
 }
 
 impl Beeper {
     pub async fn new(
         pin: esp_hal::gpio::Output<'static>,
-        button: bool,
         boat_lost: bool,
-        battery: u8
     ) -> Self {
         Self {
             pin,
-            button,
             boat_lost,
-            battery
         }
     }
 
+    // when the fisherman reports that the boat is lost this function is used
     pub fn is_lost(&mut self) {
-        self.pin.set_high();
+        if self.boat_lost == true{
+            self.pin.set_high();
+            Timer::after(Duration::from_secs(1)).await;
+            self.pin.set_low();
+            Timer::after(Duration::from_secs(1)).await;
+        } 
     }
 
+
+    // the battery library will call this from the beeper when its battery level is low
     pub async fn battery_alarm(&mut self) {
         self.pin.set_high();
         Timer::after(Duration::from_secs(1)).await;
         self.pin.set_low();
         Timer::after(Duration::from_secs(4)).await;
-    }
-
-    pub async fn main_function(&mut self){
-        if self.button == true{
-            if self.boat_lost == true{
-                self.is_lost();
-            }
-            if self.battery <= 10{
-                self.battery_alarm().await;
-            }
-        }
     }
 }
