@@ -52,11 +52,10 @@ async fn main(spawner: Spawner) -> ! {
 
 
     let buzzer = Output::new(peripherals.GPIO12, Level::Low, OutputConfig::default());
-    let mut beeper = Beeper::new(buzzer, false, false, 100).await;
-
+    let mut beeper = Beeper::new(buzzer, true).await;
 
     loop {
-        beeper.main_function().await;
+        beeper.is_lost();
     }
 
 }
