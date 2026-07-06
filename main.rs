@@ -5,7 +5,7 @@
 use esp_hal::gpio::{Level, Output, OutputConfig};
 
 use esp_hal::clock::CpuClock;
-use esp32_servo_controller::Beeper;
+use esp32_beeper_controller::Beeper;
 use esp_hal::timer::timg::TimerGroup;
 
 
